@@ -2,6 +2,7 @@
 # v1.2 也可以先只取出每个句子，在batch_iter阶段转为id
 # 这样好处是不需要一开始就将整个数据集进行转换，减小等待时间，减少内存消耗；
 # 坏处是对每个句子每个epoch都要转换一遍，增加了整体的运行时间；
+import subprocess
 
 import tensorflow as tf
 import numpy as np
@@ -79,7 +80,7 @@ if __name__ == '__main__':
 
     embedding = []
     start_time = time.time()
-    with open('data/embedding.txt') as fe:
+    with open('data/fasttext.webteb.100d.vec') as fe:
         for i, line in enumerate(fe):
             items = line.split()
             if len(items) == 101:
@@ -120,32 +121,34 @@ if __name__ == '__main__':
                 sys.stdout.write('\repoch:{:.4f}\t\taverage_loss:{:.4f}\n'.format(step/total_steps, sum(losses)/len(losses)))
                 losses = []
 
-                batch_devas = batch_iter(deva_data,Config.batch_size,False,False)
-                with open('scorer/dev15/predict', 'w') as fw:
-                    for batch_deva in batch_devas:
-                        fw.write(model.test_batch(sess, batch_deva, True))
-                result = os.popen('scorer/dev15/ev.pl scorer/dev15/gold scorer/dev15/predict').readlines()
-                deva_print = result[-8].strip() + '\t' + result[-19].strip().split()[-1]
-                best_deva = max(best_deva, float(deva_print.split()[8].rstrip('%')))
-
-                batch_devbs = batch_iter(devb_data,Config.batch_size,False,False)
-                with open('scorer/dev16/predict', 'w') as fw:
-                    for batch_devb in batch_devbs:
-                        fw.write(model.test_batch(sess, batch_devb))
-                result = os.popen('python2 scorer/dev16/ev.py scorer/dev16/gold scorer/dev16/predict').readlines()
-                devb_print = result[1].strip() + '\t' + result[8].strip() + '\t' + result[11].strip()
-                best_devb = max(best_devb, float(devb_print.split()[6]))
+                # batch_devas = batch_iter(deva_data,Config.batch_size,False,False)
+                # with open('scorer/dev15/predict', 'w') as fw:
+                #     for batch_deva in batch_devas:
+                #         fw.write(model.test_batch(sess, batch_deva, True))
+                # result = os.popen('scorer/dev15/ev.pl scorer/dev15/gold scorer/dev15/predict').readlines()
+                # deva_print = result[-8].strip() + '\t' + result[-19].strip().split()[-1]
+                # best_deva = max(best_deva, float(deva_print.split()[8].rstrip('%')))
+                #
+                # batch_devbs = batch_iter(devb_data,Config.batch_size,False,False)
+                # with open('scorer/dev16/predict', 'w') as fw:
+                #     for batch_devb in batch_devbs:
+                #         fw.write(model.test_batch(sess, batch_devb))
+                # result = os.popen('python2 scorer/dev16/ev.py scorer/dev16/gold scorer/dev16/predict').readlines()
+                # devb_print = result[1].strip() + '\t' + result[8].strip() + '\t' + result[11].strip()
+                # best_devb = max(best_devb, float(devb_print.split()[6]))
 
                 batch_tests = batch_iter(test_data,Config.batch_size,False,False)
                 with open('scorer/test17/predict', 'w') as fw:
                     for batch_test in batch_tests:
                         fw.write(model.test_batch(sess, batch_test))
+                subprocess.call("sort scorer/test17/predict > scorer/test17/predict".split())
                 result = os.popen('python2 scorer/test17/ev.py scorer/test17/gold scorer/test17/predict').readlines()
+
                 test_print = result[1].strip() + '\t' + result[8].strip() + '\t' + result[11].strip()
                 best_test = max(best_test, float(test_print.split()[6]))
 
-                print('\ndeva:{}\ndevb:{}\ntest:{}\nshow_time:{:.4f}\tbest_deva:{}\t\tbest_devb:{}\t\tbest_test:{}\n'.format(deva_print, devb_print, test_print, time.time()-show_time, best_deva, best_devb, best_test))
-                if (best_deva > 55) and (float(deva_print.split()[8].rstrip('%')) == best_deva):
-                    saver.save(sess, 'weights/best', step)
+                print('\ntest:{}\nshow_time:{:.4f}\t\tbest_test:{}\n'.format(test_print, time.time()-show_time, best_test))
+                #if (best_deva > 55) and (float(deva_print.split()[8].rstrip('%')) == best_deva):
+                #    saver.save(sess, 'weights/best', step)
                 show_time = time.time()
 

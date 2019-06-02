@@ -12,12 +12,12 @@ class Config(object):
     learning_rate = 0.05
     l2_weight = 1e-6
     dropout = 1.0
-    max_sent = 150
+    max_sent = 30
     max_word = 20
     label_list = [1,0]
     write_list = ['true', 'false']
     restore = False
-    gpu_id = -1
+    gpu_id = 0
 
     char_emb = 100
     filter_sizes = [2,3,4,5]
@@ -96,8 +96,8 @@ class Model(object):
 
             with tf.variable_scope("loss"):
                 l0 = tf.concat([self.p_vec, self.q_vec], 1)
-                l1 = tf.layers.dense(l0, 300, tf.nn.elu, name='l1')
-                l2 = tf.layers.dense(l1, 300, tf.nn.elu, name='l2')
+                l1 = tf.layers.dense(l0, 100, tf.nn.elu, name='l1')
+                l2 = tf.layers.dense(l1, 100, tf.nn.elu, name='l2')
                 self.logits = tf.layers.dense(l2, 2, tf.identity, name='logits')
                 self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=tf.one_hot(self.labels,2,dtype=tf.float32), logits=self.logits),-1)
                 for v in tf.trainable_variables():
