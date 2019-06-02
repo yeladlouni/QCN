@@ -141,7 +141,7 @@ if __name__ == '__main__':
                 with open('scorer/test17/predict', 'w') as fw:
                     for batch_test in batch_tests:
                         fw.write(model.test_batch(sess, batch_test))
-                subprocess.call("sort scorer/test17/predict > scorer/test17/predict".split())
+                subprocess.call("sort scorer/test17/predict -o scorer/test17/predict".split())
                 result = os.popen('python2 scorer/test17/ev.py scorer/test17/gold scorer/test17/predict').readlines()
 
                 test_print = result[1].strip() + '\t' + result[8].strip() + '\t' + result[11].strip()
